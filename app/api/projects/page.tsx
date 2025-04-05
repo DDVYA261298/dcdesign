@@ -179,6 +179,7 @@ function ProjectCard({ project }: { project: any }) {
           src={project.images[0]}
           alt={project.title}
           fill
+          priority
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
         {project.status === 'in-progress' && (

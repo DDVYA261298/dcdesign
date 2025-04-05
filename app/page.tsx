@@ -81,6 +81,7 @@ export default function Home() {
                     src={service.image}
                     alt={service.title}
                     fill
+                    priority
                     className="object-cover"
                   />
                 </div>
@@ -210,6 +211,7 @@ export default function Home() {
                       src={testimonial.image}
                       alt={testimonial.name}
                       fill
+                      priority
                       className="object-cover"
                     />
                   </div>

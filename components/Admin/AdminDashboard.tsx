@@ -1,20 +1,18 @@
 "use client";
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useToast } from '@/hooks/use-toast'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Home, LogOut, Upload, Users, FileText, Settings, PlusCircle, Trash2, Edit, Eye } from 'lucide-react'
-import Link from 'next/link'
-import Image from 'next/image'
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { Trash2, PlusCircle } from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
 
-// Sample Projects Data
 const projectsData = [
   {
     id: '1',
@@ -22,7 +20,7 @@ const projectsData = [
     client: 'John Smith',
     status: 'completed',
     date: '2023-10-15',
-    image: 'https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?q=80&w=400&auto=format&fit=crop'
+    image: 'https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?q=80&w=400&auto=format&fit=crop',
   },
   {
     id: '2',
@@ -30,72 +28,65 @@ const projectsData = [
     client: 'Sarah Johnson',
     status: 'completed',
     date: '2022-12-05',
-    image: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=400&auto=format&fit=crop'
-  }
-]
+    image: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=400&auto=format&fit=crop',
+  },
+];
 
 export default function AdminDashboard() {
-  const { toast } = useToast()
+  const { toast } = useToast();
 
-  const [projects, setProjects] = useState(projectsData)
+  const [projects, setProjects] = useState(projectsData);
   const [newProject, setNewProject] = useState({
     title: '',
     client: '',
     status: 'in-progress',
     description: '',
-    image: ''
-  })
+    image: '',
+  });
 
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
-  // Handle Project Input Changes
   const handleProjectChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setNewProject(prev => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setNewProject(prev => ({ ...prev, [name]: value }));
+  };
 
-  // Handle Image Upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file)
-      const imageURL = URL.createObjectURL(file)
-      setNewProject((prev) => ({ ...prev, image: imageURL }))
+      setImageFile(file);
+      const imageURL = URL.createObjectURL(file);
+      setNewProject(prev => ({ ...prev, image: imageURL }));
     }
-  }
+  };
 
-  // Handle Adding New Project
   const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
-  
     try {
       const today = new Date().toISOString().split('T')[0];
-  
       const projectData = {
         ...newProject,
         date: today,
         image: newProject.image || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=400&auto=format&fit=crop',
       };
-  
+
       const response = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(projectData),
       });
-  
+
       if (!response.ok) throw new Error('Failed to add project');
-  
-      const result = await response.json();
-  
+
+      await response.json();
+
       toast({
         title: "Project Added",
         description: "The new project has been saved to database!",
       });
-  
-      // After successful save, refresh the project list
+
       fetchProjects();
-  
-      // Clear form
+
       setNewProject({
         title: '',
         client: '',
@@ -104,7 +95,6 @@ export default function AdminDashboard() {
         image: '',
       });
       setImageFile(null);
-  
     } catch (error) {
       console.error(error);
       toast({
@@ -113,30 +103,31 @@ export default function AdminDashboard() {
       });
     }
   };
+
   const fetchProjects = async () => {
     try {
-      const res = await fetch('/api/projects');
-      const data = await res.json();
+      const response = await fetch('/api/projects');
+      if (!response.ok) {
+        throw new Error('Failed to fetch projects');
+      }
+      const data = await response.json();
       setProjects(data);
     } catch (error) {
       console.error('Failed to fetch projects:', error);
     }
   };
-  
-  // Call once on page load
+
   useEffect(() => {
     fetchProjects();
   }, []);
-  
-  // Delete Project
-  const handleDeleteProject = (id: string) => {
-    setProjects(prev => prev.filter(project => project.id !== id))
 
+  const handleDeleteProject = (id: string) => {
+    setProjects(prev => prev.filter(project => project.id !== id));
     toast({
       title: "Project Deleted",
       description: "The project has been successfully deleted."
-    })
-  }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
@@ -159,7 +150,6 @@ export default function AdminDashboard() {
             <TabsTrigger value="add-project">Add New Project</TabsTrigger>
           </TabsList>
 
-          {/* Projects List */}
           <TabsContent value="projects">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {projects.map(project => (
@@ -169,6 +159,7 @@ export default function AdminDashboard() {
                       src={project.image}
                       alt={project.title}
                       fill
+                      priority
                       className="object-cover"
                     />
                   </div>
@@ -187,7 +178,6 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
 
-          {/* Add Project Form */}
           <TabsContent value="add-project">
             <form onSubmit={handleAddProject} className="space-y-4">
               <Input
@@ -216,7 +206,7 @@ export default function AdminDashboard() {
 
               <Select
                 value={newProject.status}
-                onValueChange={(value) => setNewProject((prev) => ({ ...prev, status: value }))}
+                onValueChange={(value) => setNewProject(prev => ({ ...prev, status: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
@@ -243,5 +233,5 @@ export default function AdminDashboard() {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

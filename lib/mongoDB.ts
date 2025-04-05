@@ -1,10 +1,18 @@
-// lib/mongodb.ts
-import { MongoClient } from "mongodb";
+import mongoose from 'mongoose';
 
-const uri = process.env.MONGODB_URI!;
-const options = {};
+let isConnected = false;
 
-let client = new MongoClient(uri, options);
-let clientPromise = client.connect();
+export async function connectToDB() {
+  if (isConnected) return;
 
-export default clientPromise;
+  try {
+    await mongoose.connect(process.env.MONGODB_URI!, {
+      dbName: 'dcdesign',
+    });
+
+    isConnected = true;
+    console.log('✅ MongoDB connected');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+  }
+}

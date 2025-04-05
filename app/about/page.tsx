@@ -35,6 +35,7 @@ export default function AboutPage() {
                   src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=1200&auto=format&fit=crop"
                   alt="DC Design studio"
                   fill
+                  priority
                   className="object-cover"
                 />
               </div>
@@ -157,6 +158,7 @@ export default function AboutPage() {
                       src={member.image}
                       alt={member.name}
                       fill
+                      priority
                       className="object-cover"
                     />
                   </div>
