@@ -25,7 +25,7 @@ Thumbs.db
 # public/uploads/
 
 # Ignore large media
-public/uploads/
-*.mp4
-*.jpg
-*.png
+# public/uploads/
+# *.mp4
+# *.jpg
+# *.png
