@@ -4,6 +4,7 @@ export interface IReview extends Document {
   clientName: string;
   text: string;
   rating: number;
+  image?: String,
   project: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -18,6 +19,10 @@ const ReviewSchema: Schema = new Schema(
       required: true,
       min: 1,
       max: 5
+    },
+    image: {  
+      type: String,
+      required: false  
     },
     project: { 
       type: Schema.Types.ObjectId, 

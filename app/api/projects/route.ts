@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/mongodb";
+import cloudinary from "@/lib/cloudinary";
 import Project from "@/models/Project";
 
 
@@ -22,7 +23,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });
   }
 }
-
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -31,44 +31,50 @@ export async function POST(req: NextRequest) {
 
   const formData = await req.formData();
   const fields: Record<string, any> = {};
-  const images: string[] = [];
-  const videos: string[] = [];
-
-  // Extract form fields (except files)
-  for (const [key, value] of formData.entries()) {
-    if (key === "images" || key === "videos") continue;
-    fields[key] = value;
-  }
-
   const imageFiles = formData.getAll("images") as File[];
   const videoFiles = formData.getAll("videos") as File[];
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-
-  // Save image files
-  for (const file of imageFiles) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = `${uuid()}-${file.name}`;
-    await writeFile(path.join(uploadDir, filename), new Uint8Array(buffer));
-    images.push(`/uploads/${filename}`);
+  // Parse basic fields
+  for (const [key, value] of formData.entries()) {
+    if (key !== "images" && key !== "videos") {
+      fields[key] = value;
+    }
   }
 
-  // Save video files
-  for (const file of videoFiles) {
+  // Cloudinary Upload Helpers
+  const uploadToCloudinary = async (file: File, resourceType: "image" | "video") => {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = `${uuid()}-${file.name}`;
-    await writeFile(path.join(uploadDir, filename), new Uint8Array(buffer));
-    videos.push(`/uploads/${filename}`);
-  }
+
+    return await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        { resource_type: resourceType, folder: "dcdesign/projects" },
+        (err: any, result: any) => {
+          if (err) reject(err);
+          else resolve(result?.secure_url);
+        }
+      ).end(buffer);
+    });
+  };
+
+  // Upload images
+  const imageUrls = await Promise.all(
+    imageFiles.map((file) => uploadToCloudinary(file, "image"))
+  );
+
+  // Upload videos
+  const videoUrls = await Promise.all(
+    videoFiles.map((file) => uploadToCloudinary(file, "video"))
+  );
 
   await connectToDatabase();
+
   const project = await Project.create({
     ...fields,
     featured: fields.featured === "true",
     status: fields.status || "ongoing",
     completedDate: fields.completedDate || null,
-    images,
-    videos,
+    images: imageUrls,
+    videos: videoUrls,
   });
 
   return NextResponse.json(project, { status: 201 });

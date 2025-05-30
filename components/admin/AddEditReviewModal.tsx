@@ -49,35 +49,87 @@ export default function AddEditReviewModal({ open, onOpenChange, initialData, pr
       });    }
   }, [initialData, projectId]);
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+    }
+  };
+
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: name === "rating" ? Number(value) : value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setLoading(true);
 
-    try {
-      const res = await fetch(initialData?._id ? `/api/reviews/${initialData._id}` : "/api/reviews", {
-        method: initialData?._id ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+  //   try {
+  //     const res = await fetch(initialData?._id ? `/api/reviews/${initialData._id}` : "/api/reviews", {
+  //       method: initialData?._id ? "PUT" : "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(form)
+  //     });
+
+  //     if (res.ok) {
+  //       // toast.success(`Review ${initialData?._id ? "updated" : "created"} successfully.`);
+  //       onSuccess();
+  //       onOpenChange(false);
+  //     } else {
+  //       // toast.error("Failed to save review.");
+  //     }
+  //   } catch (error) {
+  //     // toast.error("Unexpected error.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+
+  let imageUrl = "";
+
+  try {
+    // Upload image to Cloudinary if exists
+    if (imageFile) {
+      const imageForm = new FormData();
+      imageForm.append("file", imageFile);
+      imageForm.append("upload_preset", "ml_default"); // Or your Cloudinary preset
+      imageForm.append("cloud_name", process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!);
+
+      const uploadRes = await fetch("https://api.cloudinary.com/v1_1/dma8vdur2/image/upload", {
+        method: "POST",
+        body: imageForm,
       });
 
-      if (res.ok) {
-        // toast.success(`Review ${initialData?._id ? "updated" : "created"} successfully.`);
-        onSuccess();
-        onOpenChange(false);
-      } else {
-        // toast.error("Failed to save review.");
-      }
-    } catch (error) {
-      // toast.error("Unexpected error.");
-    } finally {
-      setLoading(false);
+      const uploadData = await uploadRes.json();
+      imageUrl = uploadData.secure_url;
     }
-  };
+
+    const payload = { ...form, image: imageUrl };
+
+    const res = await fetch(initialData?._id ? `/api/reviews/${initialData._id}` : "/api/reviews", {
+      method: initialData?._id ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      onSuccess();
+      onOpenChange(false);
+    } else {
+      console.error("❌ Failed to save review");
+    }
+  } catch (error) {
+    console.error("❌ Unexpected error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -137,6 +189,10 @@ export default function AddEditReviewModal({ open, onOpenChange, initialData, pr
               onChange={handleChange}
               required
             />
+          </div>
+          <div>
+            <Label htmlFor="image">Client Image (optional)</Label>
+            <Input type="file" accept="image/*" onChange={handleImageChange} />
           </div>
 
           <Button type="submit" disabled={loading} className="w-full">
