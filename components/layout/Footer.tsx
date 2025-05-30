@@ -11,8 +11,8 @@ export default function Footer() {
           <div>
             <Link href="/" className="inline-block mb-4">
               <Image
-                src="/images/DC_Logo.png"
-                alt="DC Design Logo"
+                src="https://res.cloudinary.com/dma8vdur2/image/upload/vXXXXXXXX/dcdesign/DC_Logo.png"
+                alt="DC Logo"
                 width={100}
                 height={50}
                 className="object-contain"
