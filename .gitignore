@@ -1,0 +1,31 @@
+# Local environment variables
+.env.local
+.env.*.local
+.env
+
+# Node dependencies and builds
+node_modules/
+.next/
+out/
+dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Vercel deployment config
+.vercel/
+
+# Optional: uncomment if you store image uploads
+# public/uploads/
+
+# Ignore large media
+public/uploads/
+*.mp4
+*.jpg
+*.png
