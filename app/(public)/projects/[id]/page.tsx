@@ -1,21 +1,17 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connectToDatabase } from "@/lib/mongodb";
-import Employee from "@/models/Employee"; // ✅ make sure this is imported
-import Review from "@/models/Review";     // ✅ if you populate reviews too
 import Project from "@/models/Project";
 import ProjectDetails from "@/components/projects/ProjectDetails";
 import ProjectImages from "@/components/projects/ProjectImages";
 import ProjectTeam from "@/components/projects/ProjectTeam";
 import ProjectReviews from "@/components/projects/ProjectReviews";
 
-interface ProjectPageProps {
-  params: { id: string };
-}
-
 export async function generateMetadata({
   params,
-}: ProjectPageProps): Promise<Metadata> {
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
   await connectToDatabase();
   const project = await Project.findById(params.id);
 
@@ -31,9 +27,13 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProjectPage({ params }: ProjectPageProps) {
+export default async function ProjectPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   await connectToDatabase();
-  
+
   const project = await Project.findById(params.id)
     .populate("employees")
     .populate("reviews");
