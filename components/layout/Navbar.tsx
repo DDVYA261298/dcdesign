@@ -51,8 +51,8 @@ if (!session || session.user?.role !== "admin") {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
       <Link href="/" className="inline-block mb-4">
               <Image
-                src="/images/DC_Logo.png"
-                alt="DC Design Logo"
+                 src="https://res.cloudinary.com/dma8vdur2/image/upload/v1748639718/DC_Logo_Signature_Grey_gr2oou.png"
+                alt="DC Logo"
                 width={70}
                 height={70}
                 className="object-contain"
