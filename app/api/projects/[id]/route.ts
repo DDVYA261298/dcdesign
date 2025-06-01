@@ -1,4 +1,3 @@
-import { writeFile } from "fs/promises";
 import path from "path";
 import { v4 as uuid } from "uuid";
 import { NextRequest, NextResponse } from "next/server";
@@ -6,60 +5,64 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/mongodb";
 import Project from "@/models/Project";
-import fs from "fs/promises";
+import { uploadToS3 } from "@/lib/s3"; // ✅ S3 upload helper
+import { unlink } from "fs/promises"; // still used for fallback local cleanup
+import fs from "fs";
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const formData = await req.formData();
-  const data: Record<string, any> = {};
-  const newImages: string[] = [];
-  const newVideos: string[] = [];
-
-  for (const [key, value] of formData.entries()) {
-    if (key !== "images" && key !== "videos") {
-      data[key] = value;
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const formData = await req.formData();
+    const data: Record<string, any> = {};
+    const newImages: string[] = [];
+    const newVideos: string[] = [];
+
+    for (const [key, value] of formData.entries()) {
+      if (key !== "images" && key !== "videos") {
+        data[key] = value;
+      }
+    }
+
+    const imageFiles = formData.getAll("images") as File[];
+    const videoFiles = formData.getAll("videos") as File[];
+
+    // ✅ Upload images to S3
+    for (const file of imageFiles) {
+      const s3Url = await uploadToS3(file, "dcdesign/projects/images", file.type);
+      newImages.push(s3Url);
+    }
+
+    // ✅ Upload videos to S3
+    for (const file of videoFiles) {
+      const s3Url = await uploadToS3(file, "dcdesign/projects/videos", file.type);
+      newVideos.push(s3Url);
+    }
+
+    await connectToDatabase();
+    const existing = await Project.findById(params.id);
+    if (!existing) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    data.images = [...(existing.images || []), ...newImages];
+    data.videos = [...(existing.videos || []), ...newVideos];
+
+    const updated = await Project.findByIdAndUpdate(params.id, data, {
+      new: true,
+      runValidators: true,
+    });
+
+    return NextResponse.json(updated, { status: 200 });
+  } catch (err) {
+    console.error("❌ PUT error:", err);
+    return NextResponse.json({ error: "Failed to update project" }, { status: 500 });
   }
-
-  const imageFiles = formData.getAll("images") as File[];
-  const videoFiles = formData.getAll("videos") as File[];
-
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-
-  for (const file of imageFiles) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = `${uuid()}-${file.name}`;
-    await writeFile(path.join(uploadDir, filename), new Uint8Array(buffer));
-    newImages.push(`/uploads/${filename}`);
-  }
-
-  for (const file of videoFiles) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = `${uuid()}-${file.name}`;
-    await writeFile(path.join(uploadDir, filename), new Uint8Array(buffer));
-    newVideos.push(`/uploads/${filename}`);
-  }
-
-  await connectToDatabase();
-  const existing = await Project.findById(params.id);
-  if (!existing) {
-    return NextResponse.json({ error: "Project not found" }, { status: 404 });
-  }
-
-  data.images = [...existing.images, ...newImages];
-  data.videos = [...existing.videos, ...newVideos];
-
-  const updated = await Project.findByIdAndUpdate(params.id, data, {
-    new: true,
-    runValidators: true,
-  });
-
-  return NextResponse.json(updated);
 }
+
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -73,16 +76,20 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  // Optional: remove associated image/video files from "public/uploads"
+  // ⚠️ Optional cleanup: Remove old local files (for backward compatibility only)
   const mediaFiles = [...(project.images || []), ...(project.videos || [])];
-  for (const filePath of mediaFiles) {
-    try {
-      const fullPath = path.join(process.cwd(), "public", filePath);
-      await fs.unlink(fullPath); // Delete file if it exists
-    } catch (err) {
-      console.warn(`Failed to delete file: ${filePath}`, err);
-      // Continue even if some files fail to delete
+  for (const fileUrl of mediaFiles) {
+    if (fileUrl.startsWith("/uploads/")) {
+      try {
+        const fullPath = path.join(process.cwd(), "public", fileUrl);
+        if (fs.existsSync(fullPath)) {
+          await unlink(fullPath);
+        }
+      } catch (err) {
+        console.warn(`Failed to delete local file: ${fileUrl}`, err);
+      }
     }
+    // ⚠️ If you want to delete from S3 as well, we can add that later
   }
 
   await project.deleteOne();

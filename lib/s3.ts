@@ -24,7 +24,7 @@ export const uploadToS3 = async (
     Key: key,
     Body: buffer,
     ContentType: contentType,
-    ACL: "public-read",
+    // ACL: "public-read",
   });
 
   await s3.send(command);

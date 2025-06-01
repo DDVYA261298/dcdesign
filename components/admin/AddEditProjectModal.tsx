@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Dialog,
+  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -20,7 +21,7 @@ interface AddEditProjectModalProps {
     title: string;
     client: string;
     status: string;
-    category:string;
+    category: string;
     location: string;
     date: string;
     description?: string;
@@ -43,12 +44,15 @@ export default function AddEditProjectModal({
     title: "",
     client: "",
     status: "ongoing",
-    category: "", 
+    category: "",
     location: "",
     date: "",
     description: "",
   });
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (initialData) {
@@ -56,7 +60,7 @@ export default function AddEditProjectModal({
         title: initialData.title,
         client: initialData.client,
         status: initialData.status,
-        category: initialData.category || "", 
+        category: initialData.category || "",
         location: initialData.location,
         date: initialData.date,
         description: initialData.description || "",
@@ -74,104 +78,81 @@ export default function AddEditProjectModal({
     }
   }, [initialData]);
 
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-    const [videoFiles, setVideoFiles] = useState<File[]>([]);
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) setImageFiles(Array.from(e.target.files));
+  };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files) setImageFiles(Array.from(e.target.files));
-    };
-
-    const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files) setVideoFiles(Array.from(e.target.files));
-    };
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) setVideoFiles(Array.from(e.target.files));
+  };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-
-  //   try {
-  //     const res = await fetch(
-  //       initialData?._id ? `/api/projects/${initialData._id}` : "/api/projects",
-  //       {
-  //         method: initialData?._id ? "PUT" : "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify(form),
-  //       }
-  //     );
-
-  //     if (res.ok) {
-  //       toast.success(`Project ${initialData?._id ? "updated" : "created"} successfully.`);
-  //       onSuccess();
-  //       onOpenChange(false);
-  //     } else {
-  //       toast.error("Failed to save project.");
-  //     }
-  //   } catch (error) {
-  //     toast.error("Unexpected error.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-  
+    setProgress(0);
+
     const formData = new FormData();
-    // Add your form fields here, example:
     formData.append("title", form.title);
     formData.append("client", form.client);
     formData.append("location", form.location);
     formData.append("description", form.description);
-    formData.append("category", form.category); 
+    formData.append("category", form.category);
     formData.append("status", form.status);
     formData.append("completedDate", form.date);
     imageFiles.forEach((file) => formData.append("images", file));
     videoFiles.forEach((file) => formData.append("videos", file));
 
-  
-    try {
-      const res = await fetch(
-        initialData?._id ? `/api/projects/${initialData._id}` : "/api/projects",
-        {
-          method: initialData?._id ? "PUT" : "POST",
-          body: formData,
-        }
-      );
-  
-      const result = await res.json();
-      if (!res.ok) {
-        console.error("❌ Save failed:", result); // Log the error from backend
-        toast.error("Failed to save project.");
-        return;
+    const xhr = new XMLHttpRequest();
+    xhr.open(
+      initialData?._id ? "PUT" : "POST",
+      initialData?._id ? `/api/projects/${initialData._id}` : "/api/projects"
+    );
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        setProgress(Math.round((event.loaded / event.total) * 100));
       }
-  
-      toast.success(`Project ${initialData?._id ? "updated" : "created"} successfully.`);
-      onSuccess();
-      onOpenChange(false);
-    } catch (error) {
-      console.error("❌ Network error:", error);
-      toast.error("Unexpected error.");
-    } finally {
+    };
+
+    xhr.onload = () => {
       setLoading(false);
-    }
+      if (xhr.status === 200 || xhr.status === 201) {
+        toast.success(`Project ${initialData?._id ? "updated" : "created"} successfully.`);
+        onSuccess();
+        onOpenChange(false);
+      } else {
+        toast.error("Failed to save project.");
+      }
+    };
+
+    xhr.onerror = () => {
+      setLoading(false);
+      toast.error("Unexpected upload error.");
+    };
+
+    xhr.send(formData);
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger>Edit Project</DialogTrigger>
+
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{initialData?._id ? "Edit Project" : "Add Project"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+         <div>
             <Label htmlFor="title">Title</Label>
             <Input name="title" value={form.title} onChange={handleChange} required />
           </div>
@@ -221,20 +202,28 @@ export default function AddEditProjectModal({
 
             <div>
               <Label htmlFor="videos">Project Videos</Label>
-              <Input type="file" accept="video/*" multiple onChange={handleVideoChange} />
+                  <Input type="file" accept="video/*" multiple onChange={handleVideoChange} />
             </div>
           <div>
             <Label htmlFor="date">Date</Label>
             <Input type="date" name="date" value={form.date} onChange={handleChange} required />
           </div>
-
           <div>
             <Label htmlFor="description">Description</Label>
             <Textarea name="description" value={form.description} onChange={handleChange} />
           </div>
 
+
+          {progress > 0 && progress < 100 && (
+            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+              <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-in-out"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          )}
+
           <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Saving..." : "Save Project"}
+            {loading ? `Uploading (${progress}%)...` : "Save Project"}
           </Button>
         </form>
       </DialogContent>

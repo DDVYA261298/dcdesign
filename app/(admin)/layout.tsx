@@ -3,15 +3,14 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-
-
-export const dynamic = "force-dynamic";
-
+import { headers } from "next/headers"; // ✅ Correct import
 
 export const metadata: Metadata = {
   title: "Admin Dashboard | Interior Design Portfolio",
   description: "Manage your portfolio content",
 };
+
+export const dynamic = "force-dynamic"; // ✅ Makes `headers()` async-safe
 
 export default async function AdminLayout({
   children,
@@ -20,18 +19,15 @@ export default async function AdminLayout({
 }) {
   const session = await getServerSession(authOptions);
 
-  // ✅ Use headers() to check path
-  const pathname = (typeof window === "undefined"
-    ? require("next/headers").headers().get("x-pathname")
-    : window.location.pathname) || "";
+  const headerList = await headers(); // ✅ await is now required
+  const pathname = headerList.get("x-pathname") || "";
 
-  // ✅ Skip redirect only for the login page
   const isLoginPage = pathname === "/admin/login";
 
   if (!session && !isLoginPage) {
     redirect("/admin/login");
   }
-  
+
   return (
     <div className="flex h-screen bg-gray-100">
       <AdminSidebar />

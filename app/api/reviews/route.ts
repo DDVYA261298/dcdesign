@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/mongodb";
 import Review from "@/models/Review";
 import mongoose from "mongoose";
-import { uploadToS3 } from "@/lib/s3";
 
 
 export async function GET(req: NextRequest) {
@@ -69,36 +68,24 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const formData = await req.formData();
+  const body = await req.json();
 
-  const clientName = formData.get("clientName")?.toString() || "";
-  const text = formData.get("text")?.toString() || "";
-  const rating = parseInt(formData.get("rating")?.toString() || "0");
-  const projectId = formData.get("project")?.toString() || "";
-  const imageFile = formData.get("image") as File;
-
-  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+  if (!mongoose.Types.ObjectId.isValid(body.project)) {
     return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
   }
-
-   let imageUrl = "";
-  if (imageFile && imageFile.size > 0) {
-    imageUrl = await uploadToS3(imageFile, "dcdesign/reviews", imageFile.type);
-  }
-
 
   try {
     await connectToDatabase();
     const review = await Review.create({
-      clientName,
-      text,
-      rating,
-      image: imageUrl,
-      project: projectId,
+      clientName: body.clientName,
+      text: body.text,
+      rating: body.rating,
+      project: body.project,
     });
 
+    // Optional: update the project with this review ID
     const Project = (await import("@/models/Project")).default;
-    await Project.findByIdAndUpdate(projectId, { $push: { reviews: review._id } });
+    await Project.findByIdAndUpdate(body.project, { $push: { reviews: review._id } });
 
     return NextResponse.json(review, { status: 201 });
   } catch (error) {
