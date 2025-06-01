@@ -1,8 +1,7 @@
 // app/api/upload/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import cloudinary from "@/lib/cloudinary";
-import { writeFile } from "fs/promises";
-import path from "path";
+import { s3 } from "@/lib/s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
 
 export async function POST(req: NextRequest) {
@@ -14,19 +13,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    // Save file temporarily
     const buffer = Buffer.from(await file.arrayBuffer());
-    const tempFilename = `${randomUUID()}-${file.name}`;
-    const tempPath = path.join("/tmp", tempFilename);
-    await writeFile(tempPath, new Uint8Array(buffer));
+    const fileKey = `uploads/${randomUUID()}-${file.name}`;
 
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(tempPath, {
-      folder: "portfolio_uploads",
+    const command = new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET!,
+      Key: fileKey,
+      Body: buffer,
+      ContentType: file.type,
+      ACL: "public-read", // make file public
     });
 
-    return NextResponse.json({ url: result.secure_url }, { status: 200 });
+    await s3.send(command);
+
+    const publicUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
+
+    return NextResponse.json({ url: publicUrl }, { status: 200 });
   } catch (error: any) {
+    console.error("Upload error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

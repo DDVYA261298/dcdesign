@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/mongodb";
 import Review from "@/models/Review";
 import mongoose from "mongoose";
-import cloudinary from "@/lib/cloudinary";
+import { uploadToS3 } from "@/lib/s3";
 
 
 export async function GET(req: NextRequest) {
@@ -81,21 +81,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
   }
 
-  let imageUrl = "";
+   let imageUrl = "";
   if (imageFile && imageFile.size > 0) {
-    const buffer = Buffer.from(await imageFile.arrayBuffer());
-
-    imageUrl = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder: "reviews", resource_type: "image" },
-        (err, result) => {
-          if (err || !result) return reject(err);
-          resolve(result.secure_url);
-        }
-      );
-      stream.end(buffer);
-    });
+    imageUrl = await uploadToS3(imageFile, "dcdesign/reviews", imageFile.type);
   }
+
 
   try {
     await connectToDatabase();

@@ -87,85 +87,74 @@ export default function AddEditReviewModal({ open, onOpenChange, initialData, pr
   //     setLoading(false);
   //   }
   // };
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setLoading(true);
 
-  let imageUrl = "";
+      try {
+        const formData = new FormData();
+        formData.append("clientName", form.clientName);
+        formData.append("text", form.text);
+        formData.append("rating", form.rating.toString());
+        formData.append("project", form.project);
 
-  try {
-    // Upload image to Cloudinary if exists
-    if (imageFile) {
-      const imageForm = new FormData();
-      imageForm.append("file", imageFile);
-      imageForm.append("upload_preset", "ml_default"); // Or your Cloudinary preset
-      imageForm.append("cloud_name", process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!);
+        if (imageFile) {
+          formData.append("image", imageFile);
+        }
 
-      const uploadRes = await fetch("https://api.cloudinary.com/v1_1/dma8vdur2/image/upload", {
-        method: "POST",
-        body: imageForm,
-      });
+        const res = await fetch(initialData?._id ? `/api/reviews/${initialData._id}` : "/api/reviews", {
+          method: initialData?._id ? "PUT" : "POST",
+          body: formData,
+        });
 
-      const uploadData = await uploadRes.json();
-      imageUrl = uploadData.secure_url;
-    }
+        if (res.ok) {
+          onSuccess();
+          onOpenChange(false);
+        } else {
+          console.error("❌ Failed to save review");
+        }
+      } catch (error) {
+        console.error("❌ Unexpected error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    const payload = { ...form, image: imageUrl };
+      return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{initialData?._id ? "Edit Review" : "Add Review"}</DialogTitle>
+            </DialogHeader>
 
-    const res = await fetch(initialData?._id ? `/api/reviews/${initialData._id}` : "/api/reviews", {
-      method: initialData?._id ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="clientName">Client Name</Label>
+                <Input
+                  name="clientName"
+                  value={form.clientName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-    if (res.ok) {
-      onSuccess();
-      onOpenChange(false);
-    } else {
-      console.error("❌ Failed to save review");
-    }
-  } catch (error) {
-    console.error("❌ Unexpected error:", error);
-  } finally {
-    setLoading(false);
-  }
-};
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{initialData?._id ? "Edit Review" : "Add Review"}</DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="clientName">Client Name</Label>
-            <Input
-              name="clientName"
-              value={form.clientName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="project">Project</Label>
-            {projects.length > 0 ? (
-  <select
-    name="project"
-    value={form.project}
-    onChange={handleChange}
-    required
-    className="w-full border rounded px-3 py-2"
-  >
-    {projects.map((p) => (
-      <option key={p._id} value={p._id}>{p.title}</option>
-    ))}
-  </select>
-) : (
-  <p className="text-sm text-red-500">No projects available</p>
-)}
+              <div>
+                <Label htmlFor="project">Project</Label>
+                {projects.length > 0 ? (
+      <select
+        name="project"
+        value={form.project}
+        onChange={handleChange}
+        required
+        className="w-full border rounded px-3 py-2"
+      >
+        {projects.map((p) => (
+          <option key={p._id} value={p._id}>{p.title}</option>
+        ))}
+      </select>
+    ) : (
+      <p className="text-sm text-red-500">No projects available</p>
+    )}
           </div>
 
           <div>

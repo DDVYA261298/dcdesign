@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/mongodb";
-import cloudinary from "@/lib/cloudinary";
+import { uploadToS3 } from "@/lib/s3";
 import Project from "@/models/Project";
 
 
@@ -41,30 +41,15 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Cloudinary Upload Helpers
-  const uploadToCloudinary = async (file: File, resourceType: "image" | "video") => {
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    return await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        { resource_type: resourceType, folder: "dcdesign/projects" },
-        (err: any, result: any) => {
-          if (err) reject(err);
-          else resolve(result?.secure_url);
-        }
-      ).end(buffer);
-    });
-  };
-
+  
   // Upload images
-  const imageUrls = await Promise.all(
-    imageFiles.map((file) => uploadToCloudinary(file, "image"))
+   const imageUrls = await Promise.all(
+    imageFiles.map(file => uploadToS3(file, "dcdesign/projects/images", file.type))
+  );
+  const videoUrls = await Promise.all(
+    videoFiles.map(file => uploadToS3(file, "dcdesign/projects/videos", file.type))
   );
 
-  // Upload videos
-  const videoUrls = await Promise.all(
-    videoFiles.map((file) => uploadToCloudinary(file, "video"))
-  );
 
   await connectToDatabase();
 
