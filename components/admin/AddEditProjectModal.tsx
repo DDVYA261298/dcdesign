@@ -95,61 +95,74 @@ export default function AddEditProjectModal({
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setProgress(0);
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setProgress(0);
 
-    const formData = new FormData();
-    formData.append("title", form.title);
-    formData.append("client", form.client);
-    formData.append("location", form.location);
-    formData.append("description", form.description);
-    formData.append("category", form.category);
-    formData.append("status", form.status);
-    formData.append("completedDate", form.date);
-    imageFiles.forEach((file) => formData.append("images", file));
-    videoFiles.forEach((file) => formData.append("videos", file));
+  const formData = new FormData();
+  formData.append("title", form.title);
+  formData.append("client", form.client);
+  formData.append("location", form.location);
+  formData.append("description", form.description);
+  formData.append("category", form.category);
+  formData.append("status", form.status);
+  formData.append("completedDate", form.date);
+  imageFiles.forEach((file) => formData.append("images", file));
+  videoFiles.forEach((file) => formData.append("videos", file));
 
-    const xhr = new XMLHttpRequest();
-    xhr.open(
-      initialData?._id ? "PUT" : "POST",
-      initialData?._id ? `/api/projects/${initialData._id}` : "/api/projects"
+  try {
+    const res = await fetch(
+      initialData?._id ? `/api/projects/${initialData._id}` : "/api/projects",
+      {
+        method: initialData?._id ? "PUT" : "POST",
+        body: formData,
+      }
     );
 
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        setProgress(Math.round((event.loaded / event.total) * 100));
-      }
-    };
+    let result: any;
+    const contentType = res.headers.get("content-type") || "";
 
-    xhr.onload = () => {
-      setLoading(false);
-      if (xhr.status === 200 || xhr.status === 201) {
-        toast.success(`Project ${initialData?._id ? "updated" : "created"} successfully.`);
-        onSuccess();
-        onOpenChange(false);
-      } else {
-        toast.error("Failed to save project.");
-      }
-    };
+    if (contentType.includes("application/json")) {
+      result = await res.json();
+    } else {
+      const text = await res.text();
+      result = { error: text };
+    }
 
-    xhr.onerror = () => {
-      setLoading(false);
-      toast.error("Unexpected upload error.");
-    };
+    if (!res.ok) {
+      console.error("❌ Save failed:", result);
+      toast.error(result.error || "Failed to save project.");
+      return;
+    }
 
-    xhr.send(formData);
-  };
+    toast.success(`Project ${initialData?._id ? "updated" : "created"} successfully.`);
+    onSuccess();
+    onOpenChange(false);
+  } catch (error) {
+    toast.error("Unexpected error during upload.");
+    console.error("❌ Unexpected error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger>Edit Project</DialogTrigger>
 
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{initialData?._id ? "Edit Project" : "Add Project"}</DialogTitle>
-        </DialogHeader>
+        <DialogContent
+          className="sm:max-w-lg"
+          aria-describedby="project-dialog-description"
+        >      
+         <DialogHeader>
+              <DialogTitle>{initialData?._id ? "Edit Project" : "Add Project"}</DialogTitle>
+             <p id="project-dialog-description" className="text-sm text-gray-500">
+                Fill in the details below to {initialData?._id ? "update" : "create"} a project.
+              </p>
+
+            </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
          <div>
@@ -227,6 +240,7 @@ export default function AddEditProjectModal({
           </Button>
         </form>
       </DialogContent>
+     
     </Dialog>
   );
 }
