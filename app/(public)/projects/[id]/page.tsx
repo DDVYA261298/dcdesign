@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { connectToDatabase } from "@/lib/mongodb";
 import Project from "@/models/Project";
 import ProjectDetails from "@/components/projects/ProjectDetails";
-import ProjectImages from "@/components/projects/ProjectImages";
+// import ProjectImages from "@/components/projects/ProjectImages";
 import ProjectTeam from "@/components/projects/ProjectTeam";
 import ProjectReviews from "@/components/projects/ProjectReviews";
 
@@ -41,13 +41,16 @@ export default async function ProjectPage({
   if (!project) {
     notFound();
   }
+  const serialized = JSON.parse(JSON.stringify(project));
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <ProjectDetails project={JSON.parse(JSON.stringify(project))} />
-      {/* <ProjectImages project={JSON.parse(JSON.stringify(project))} /> */}
-      <ProjectTeam project={JSON.parse(JSON.stringify(project))} />
-      <ProjectReviews project={JSON.parse(JSON.stringify(project))} />
-    </div>
+<ProjectDetails project={serialized} />
+        {/* <ProjectImages project={JSON.parse(JSON.stringify(project))} /> */}
+{/* <ProjectImages project={serialized} /> */}
+<ProjectTeam    project={serialized} />
+<ProjectReviews project={serialized} />
+
+</div>
   );
 }
