@@ -51,7 +51,7 @@ if (!session || session.user?.role !== "admin") {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
       <Link href="/" className="inline-block mb-4">
               <Image
-                 src="https://dcdesign-media.s3.ap-south-1.amazonaws.com/branding/DC_Logo_Signature_Grey.png"
+                src="/images/DC_Logo_Signature_Grey.png"
                 alt="DC Logo"
                 width={70}
                 height={70}
