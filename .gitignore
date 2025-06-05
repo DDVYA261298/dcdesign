@@ -20,6 +20,7 @@ Thumbs.db
 
 # Vercel deployment config
 .vercel/
+clean_vercel_deployments.sh
 
 # Optional: uncomment if you store image uploads
 # public/uploads/
@@ -29,3 +30,4 @@ Thumbs.db
 # *.mp4
 # *.jpg
 # *.png
+.vercel
