@@ -45,7 +45,7 @@ export default async function ProjectPage({
   return (
     <div className="container mx-auto px-4 py-12">
       <ProjectDetails project={JSON.parse(JSON.stringify(project))} />
-      <ProjectImages project={JSON.parse(JSON.stringify(project))} />
+      {/* <ProjectImages project={JSON.parse(JSON.stringify(project))} /> */}
       <ProjectTeam project={JSON.parse(JSON.stringify(project))} />
       <ProjectReviews project={JSON.parse(JSON.stringify(project))} />
     </div>

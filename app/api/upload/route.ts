@@ -15,7 +15,6 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const fileKey = `uploads/${randomUUID()}-${file.name}`;
-
     const command = new PutObjectCommand({
       Bucket: process.env.AWS_S3_BUCKET!,
       Key: fileKey,

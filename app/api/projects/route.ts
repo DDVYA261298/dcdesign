@@ -35,24 +35,13 @@ export async function POST(req: NextRequest) {
     const featured = formData.get("featured") === "true";
     const category = formData.get("category") as string;
 
-    const imageFiles = formData.getAll("images") as File[];
-    const videoFiles = formData.getAll("videos") as File[];
+    // ✅ Just get URLs
+    const imageUrls = formData.getAll("images") as string[];
+    const videoUrls = formData.getAll("videos") as string[];
 
-    if (!title || !description || !client || !location || !category || imageFiles.length === 0) {
+    if (!title || !description || !client || !location || !category || imageUrls.length === 0) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
-
-    const imageUrls = await Promise.all(
-      imageFiles.map(file =>
-        uploadToS3(file, "dcdesign/projects/images", file.type)
-      )
-    );
-
-    const videoUrls = await Promise.all(
-      videoFiles.map(file =>
-        uploadToS3(file, "dcdesign/projects/videos", file.type)
-      )
-    );
 
     await connectToDatabase();
 
@@ -66,7 +55,7 @@ export async function POST(req: NextRequest) {
       featured,
       category,
       images: imageUrls,
-      videos: videoUrls,
+      videos: [],
       createdAt: new Date(),
     });
 
@@ -76,3 +65,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+

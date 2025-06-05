@@ -9,7 +9,7 @@ interface ProjectTeamProps {
       id: string;
       name: string;
       role: string;
-      department:string;
+      department: string;
       image: string;
     }>;
   };

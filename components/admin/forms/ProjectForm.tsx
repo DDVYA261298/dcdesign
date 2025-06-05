@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import toast from "react-hot-toast";
 
 interface ProjectFormProps {
   onSubmit: (formData: FormData) => void;
@@ -39,20 +40,43 @@ export default function ProjectForm({ onSubmit }: ProjectFormProps) {
     setImages(selectedFiles);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    const uploadImageToS3 = async (file: File): Promise<string> => {
     const formData = new FormData();
-  
-    Object.entries(form).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        formData.append(key, typeof value === "boolean" ? String(value) : value.toString());
-      }
+    formData.append("file", file);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
     });
-  
-    images.forEach((file) => formData.append("images", file));
-    onSubmit(formData);
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Upload failed");
+
+    return data.url; // S3 public URL
   };
-  
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  try {
+    const uploadedImageUrls = await Promise.all(
+      images.map((file) => uploadImageToS3(file))
+    );
+
+    const formData = new FormData();
+    Object.entries(form).forEach(([key, value]) => {
+      formData.append(key, value.toString());
+    });
+    uploadedImageUrls.forEach(url => formData.append("images", url));
+
+    await onSubmit(formData);
+    toast.success("✅ Project submitted successfully!");
+  } catch (err) {
+    console.error("Form submit failed:", err);
+    toast.error("❌ Submission failed. Please try again.");
+  }
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -104,6 +128,20 @@ export default function ProjectForm({ onSubmit }: ProjectFormProps) {
       <div>
         <Label>Project Images</Label>
         <Input type="file" name="images" multiple onChange={handleImageChange} />
+                {images.length > 0 && (
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          {images.map((file, index) => (
+            <div key={index} className="border rounded overflow-hidden">
+              <img
+                src={URL.createObjectURL(file)}
+                alt={`Preview ${index + 1}`}
+                className="w-full h-48 object-cover"
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
       </div>
       <Button type="submit">Submit</Button>
     </form>
