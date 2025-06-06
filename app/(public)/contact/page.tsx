@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import ContactForm from "@/components/contact/ContactForm";
+// import ContactForm from "@/components/contact/ContactForm";
 import ContactInfo from "@/components/contact/ContactInfo";
 
 export const metadata: Metadata = {
@@ -9,13 +9,13 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="container mx-auto px-4 py-12">
-      <h1 className="mb-8 text-4xl font-bold text-gray-900">Contact Us</h1>
-      
-      <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
+    <main className="bg-gray-50 min-h-screen">
+      <div className="container mx-auto px-4 py-12">
+        <h1 className="mb-8 text-4xl font-bold text-gray-900 text-center md:text-left">
+          Contact Us
+        </h1>
         <ContactInfo />
-        <ContactForm />
       </div>
-    </div>
+    </main>
   );
 }

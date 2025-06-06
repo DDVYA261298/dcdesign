@@ -23,7 +23,7 @@ const seedDatabase = async () => {
     await User.deleteMany({});
     
     // Create admin user
-    const adminPassword = 'admin123'; // Change this to a secure password
+    const adminPassword = 'Vasai@dcdesign25'; // Change this to a secure password
     
     const adminUser = new User({
       username: 'admin',
