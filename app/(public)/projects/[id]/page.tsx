@@ -3,8 +3,6 @@ import { notFound } from "next/navigation";
 import { connectToDatabase } from "@/lib/mongodb";
 import Project from "@/models/Project";
 import ProjectDetails from "@/components/projects/ProjectDetails";
-// import ProjectImages from "@/components/projects/ProjectImages";
-import ProjectTeam from "@/components/projects/ProjectTeam";
 import ProjectReviews from "@/components/projects/ProjectReviews";
 
 export async function generateMetadata({
@@ -48,7 +46,7 @@ export default async function ProjectPage({
 <ProjectDetails project={serialized} />
         {/* <ProjectImages project={JSON.parse(JSON.stringify(project))} /> */}
 {/* <ProjectImages project={serialized} /> */}
-<ProjectTeam    project={serialized} />
+{/* <ProjectTeam    project={serialized} /> */}
 <ProjectReviews project={serialized} />
 
 </div>

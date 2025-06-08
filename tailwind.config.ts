@@ -11,8 +11,7 @@ const config: Config = {
     extend: {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -70,6 +69,13 @@ const config: Config = {
             height: 'var(--radix-accordion-content-height)',
           },
         },
+        'kenburns': {
+           '0%':   { transform: 'scale(1) translate(0, 0)' },
+          '50%':  { transform: 'scale(1.15) translate(-5%, -5%)' },
+          '100%': { transform: 'scale(1.2) translate(-10%, -10%)' },
+        },
+
+       
         'accordion-up': {
           from: {
             height: 'var(--radix-accordion-content-height)',
@@ -82,9 +88,14 @@ const config: Config = {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'kenburns': 'kenburns 8s ease-in-out infinite alternate',
+
       },
+      
     },
   },
-  plugins: [require('tailwindcss-animate')],
-};
+plugins: [
+    require('tailwindcss-animate'),
+    require('@tailwindcss/line-clamp'),
+  ],};
 export default config;

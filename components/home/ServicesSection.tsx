@@ -1,123 +1,71 @@
 // components/home/ServicesSection.tsx
-"use client";
+import React from 'react'
+import { BiGridAlt }     from 'react-icons/bi'
+import { FaPaintBrush }  from 'react-icons/fa'
+import { FiZap }         from 'react-icons/fi'
+import { GiSofa }        from 'react-icons/gi'
+import { GiPaintRoller } from 'react-icons/gi'
+import { GiWoodCabin }   from 'react-icons/gi'
 
-import Tilt from "react-parallax-tilt";
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Paintbrush, Layout, Sofa, Ruler } from "lucide-react";
+type Service = {
+  title: string
+  description: string
+  Icon: React.FC<React.SVGProps<SVGSVGElement>>
+}
 
-const services = [
+const services: Service[] = [
   {
-    icon: Layout,
-    title: "Space Planning",
-    description:
-      "Expert layout optimization to maximize your space's functionality and flow.",
+    title: 'Space Planning',
+    description: 'Optimizing layout for function, comfort, and aesthetic visual flow.',
+    Icon: BiGridAlt,
   },
   {
-    icon: Paintbrush,
-    title: "Interior Design",
-    description:
-      "Complete design solutions that transform your space into a stunning environment.",
+    title: 'Color Consultation',
+    description: 'Choosing harmonious palettes that reflect mood, space, and personality.',
+    Icon: FaPaintBrush,
   },
   {
-    icon: Sofa,
-    title: "Furniture Selection",
-    description:
-      "Curated furniture choices that perfectly match your style and needs.",
+    title: 'Lighting Design',
+    description: 'Enhancing ambiance and functionality with strategic lighting placements.',
+    Icon: FiZap,
   },
   {
-    icon: Ruler,
-    title: "Project Management",
-    description:
-      "End-to-end project coordination ensuring smooth execution and timely delivery.",
+    title: 'Furniture Selection',
+    description: 'Picking stylish, functional pieces to match space and purpose.',
+    Icon: GiSofa,
   },
-];
+  {
+    title: 'Wall Treatments',
+    description: 'Applying paint, wallpaper, or textures for visual interest enhancement.',
+    Icon: GiPaintRoller,
+  },
+  {
+    title: 'Flooring Design',
+    description: 'Selecting materials for style, durability, and room-specific performance.',
+    Icon: GiWoodCabin,
+  },
+]
 
 export default function ServicesSection() {
   return (
-    <section className="py-20 bg-gray-50 px-4 md:px-0">
-      {/* Section Header */}
-      <div className="text-center mb-16">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-4xl font-bold tracking-tight mb-4 text-gray-900"
-        >
-          Our Services
-        </motion.h2>
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          className="text-lg text-gray-600 max-w-2xl mx-auto"
-        >
-          We offer comprehensive interior design services to bring your vision to
-          life.
-        </motion.p>
-      </div>
-
-      {/* Cards Grid */}
-      <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-        variants={{
-          hidden: {},
-          visible: {
-            transition: {
-              staggerChildren: 0.15,
-            },
-          },
-        }}
-      >
-        {services.map((service, idx) => {
-          const Icon = service.icon;
-          return (
-            <motion.div
-              key={service.title}
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0 },
-              }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
+    <section className="py-16 bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-bold text-center mb-12">Our Services</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {services.map(({ title, description, Icon }) => (
+            <div
+              key={title}
+              className="p-6 bg-white rounded-lg shadow-lg flex items-start space-x-4"
             >
-              <Tilt
-                tiltMaxAngleX={6}
-                tiltMaxAngleY={6}
-                perspective={1000}
-                scale={1.02}
-                transitionSpeed={250}
-                className="rounded-lg"
-              >
-                <Card className="overflow-hidden shadow-lg hover:shadow-2xl transition-shadow">
-                  <CardContent className="pt-8 pb-6 px-6 flex flex-col items-center text-center">
-                    {/* Icon Container */}
-                    <motion.div
-                      whileHover={{ scale: 1.2, backgroundColor: "rgba(59,130,246,0.1)" }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                      className="p-4 bg-primary/10 rounded-full mb-4"
-                    >
-                      <Icon className="h-8 w-8 text-primary" />
-                    </motion.div>
-
-                    {/* Title */}
-                    <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                      {service.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-gray-600">{service.description}</p>
-                  </CardContent>
-                </Card>
-              </Tilt>
-            </motion.div>
-          );
-        })}
-      </motion.div>
+              <Icon className="text-primary text-4xl flex-shrink-0" />
+              <div>
+                <h3 className="text-xl font-semibold mb-2">{title}</h3>
+                <p className="text-gray-600 leading-relaxed">{description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
-  );
+  )
 }

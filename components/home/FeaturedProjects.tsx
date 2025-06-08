@@ -24,11 +24,11 @@ interface Project {
 function SkeletonCard() {
   return (
     <div className="animate-pulse">
-      <div className="h-48 bg-gray-200" />
+      <div className="h-40 bg-gray-200" />
       <div className="p-4 space-y-2">
         <div className="h-4 bg-gray-200 rounded w-3/4" />
         <div className="h-3 bg-gray-200 rounded w-5/6" />
-        <div className="h-8 bg-gray-200 rounded w-full mt-2" />
+        <div className="h-6 bg-gray-200 rounded w-full mt-2" />
       </div>
     </div>
   );
@@ -54,9 +54,9 @@ export default function FeaturedProjects() {
   }, []);
 
   return (
-    <section className="py-20 bg-white px-4 md:px-0">
+    <section className="py-16 bg-white px-4 sm:px-6 lg:px-8">
       <motion.div
-        className="text-center mb-16"
+        className="text-center mb-12"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
@@ -68,28 +68,28 @@ export default function FeaturedProjects() {
         <motion.h2
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           transition={{ duration: 0.6 }}
-          className="text-4xl font-bold"
+          className="text-3xl font-bold"
         >
           Featured Projects
         </motion.h2>
         <motion.p
           variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="text-lg text-gray-600 max-w-2xl mx-auto"
+          className="text-base text-gray-600 max-w-xl mx-auto"
         >
           Discover our most impressive interior design transformations.
         </motion.p>
       </motion.div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[1, 2, 3].map((i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
       ) : (
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -98,32 +98,32 @@ export default function FeaturedProjects() {
           {projects.map((project, idx) => (
             <motion.div
               key={project._id}
-              variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.4, delay: idx * 0.1 }}
             >
               <Tilt
-                tiltMaxAngleX={6}
-                tiltMaxAngleY={6}
-                perspective={1000}
-                scale={1.02}
-                transitionSpeed={250}
+                tiltMaxAngleX={4}
+                tiltMaxAngleY={4}
+                perspective={800}
+                scale={1.01}
+                transitionSpeed={200}
                 className="rounded-lg"
               >
                 <Card className="overflow-hidden shadow-lg transition-shadow hover:shadow-2xl">
                   <CardContent className="p-0">
                     <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent z-10 pointer-events-none" />
                       <Swiper
                         modules={[Pagination]}
                         spaceBetween={0}
                         slidesPerView={1}
                         pagination={{ clickable: true }}
-                        autoplay={{ delay: 4000, disableOnInteraction: false }}
+                        autoplay={{ delay: 3500, disableOnInteraction: false }}
                         loop
                       >
                         {project.images.map((img, i) => (
                           <SwiperSlide key={i}>
-                            <div className="aspect-video relative">
+                            <div className="h-40 relative">
                               <Image
                                 src={img}
                                 alt={project.title}
@@ -137,18 +137,21 @@ export default function FeaturedProjects() {
                         ))}
                       </Swiper>
                     </div>
-                    <div className="p-6 bg-white">
-                      <h3 className="text-xl font-semibold mb-2 text-gray-900">
+                    <div className="p-4 bg-white">
+                      <h3 className="text-lg font-semibold mb-1 text-gray-900 line-clamp-2">
                         {project.title}
                       </h3>
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                        {project.description}
-                      </p>
                       <Link href={`/projects/${project._id}`}>
-                        <motion.div whileHover={{ x: 6 }} transition={{ type: "spring", stiffness: 300 }}>
-                          <Button variant="outline" className="w-full flex justify-center items-center">
+                        <motion.div
+                          whileHover={{ x: 4 }}
+                          transition={{ type: "spring", stiffness: 300 }}
+                        >
+                          <Button
+                            variant="outline"
+                            className="w-full text-sm flex justify-center items-center"
+                          >
                             View Project
-                            <ArrowRight className="ml-2 h-4 w-4" />
+                            <ArrowRight className="ml-1 h-4 w-4" />
                           </Button>
                         </motion.div>
                       </Link>
@@ -161,14 +164,10 @@ export default function FeaturedProjects() {
         </motion.div>
       )}
 
-      <div className="mt-14 text-center">
-        <motion.div
-          whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(0,0,0,0.2)" }}
-          transition={{ type: "spring", stiffness: 300 }}
-        >
+      <div className="mt-12 text-center">
+        <motion.div whileHover={{ scale: 1.03 }} transition={{ type: "spring", stiffness: 300 }}>
           <Link href="/projects">
-            <Button size="lg" className="shadow-lg hover:shadow-2xl transition-all">
-              View All Projects
+          <Button size="lg" className="shadow-lg hover:shadow-2xl">              View All Projects
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>

@@ -4,13 +4,16 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Dialog } from "@headlessui/react";
-import { X } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface ProjectDetailsProps {
   project: {
     title: string;
     description: string;
-    status: string;
+    status: "completed" | "in progress" | string;
     client: string;
     location: string;
     completedDate?: string;
@@ -21,160 +24,196 @@ interface ProjectDetailsProps {
 
 export default function ProjectDetails({ project }: ProjectDetailsProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeImage, setActiveImage] = useState<number>(0);
+  const [activeImage, setActiveImage] = useState(0);
 
-  const openGallery = (index: number) => {
-    setActiveImage(index);
-    setIsOpen(true);
-  };
-
-  const displayedImages = project.images?.slice(0, 6) || [];
+  const images = project.images ?? [];
+  const previewImages = images.slice(0, 6);
 
   return (
-    <motion.div
-      className="mb-16"
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
+    <div className="container mx-auto px-6 py-12 space-y-16">
+      {/* Title & Status */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+      >
+        <h1 className="text-5xl font-extrabold text-gray-900">
           {project.title}
         </h1>
-        <span
-          className={`text-sm px-4 py-1 rounded-full shadow-md text-white ${
+        <Badge
+          className={`px-5 py-1 ${
             project.status === "completed"
-              ? "bg-gradient-to-r from-green-400 to-teal-500"
-              : "bg-gray-400"
+              ? "bg-gradient-to-r from-green-400 to-teal-500 text-white"
+              : "bg-gray-400 text-white"
           }`}
         >
-          {project.status}
-        </span>
-      </div>
+          {project.status.toUpperCase()}
+        </Badge>
+      </motion.div>
 
-      {/* Fancy Collage Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
-        {displayedImages.map((img, index) => (
-          <motion.div
-            key={index}
-            onClick={() => openGallery(index)}
-            className={`relative cursor-pointer overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:scale-105 ${
-              index % 3 === 0 ? "row-span-2 col-span-2" : ""
-            }`}
-            whileHover={{ scale: 1.03 }}
-          >
-            <Image
-              src={img}
-              alt={`Project ${index + 1}`}
-              width={800}
-              height={600}
-              layout="responsive"
-              objectFit="cover"
-              className="w-full h-auto object-cover rounded"
-            />
-          </motion.div>
-        ))}
-      </div>
-      {project.videos && project.videos.length > 0 && (
-        <div className="grid gap-6 md:grid-cols-2 mt-10">
-          <h2 className="col-span-full text-2xl font-semibold text-gray-900">🎥 Project Videos</h2>
-          {project.videos.map((video, index) => (
-            <div key={index} className="rounded-lg overflow-hidden shadow-lg">
-              <div className="aspect-video">
-                <iframe
-                  src={video}
-                  title={`Project Video ${index + 1}`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full rounded"
+      {/* Description */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="max-w-3xl text-lg text-gray-700"
+      >
+        {project.description}
+      </motion.p>
+
+      {/* Image Grid */}
+      {previewImages.length > 0 && (
+        <>
+          <h2 className="text-3xl font-semibold text-gray-900">Gallery</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {previewImages.map((src, idx) => (
+              <motion.div
+                key={src}
+                onClick={() => {
+                  setActiveImage(idx);
+                  setIsOpen(true);
+                }}
+                className={`relative overflow-hidden rounded-2xl shadow-lg cursor-pointer ${
+                  idx === 0 ? "sm:col-span-2 sm:row-span-2" : ""
+                } transition-transform`}
+                whileHover={{ scale: 1.03 }}
+              >
+                <Image
+                  src={src}
+                  alt={`Project image ${idx + 1}`}
+                  width={800}
+                  height={600}
+                  className="object-cover w-full h-60"
                 />
-              </div>
-            </div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        </>
       )}
 
-      {/* Lightbox Popup */}
-      <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="relative z-50">
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4">
-          <Dialog.Panel className="relative max-w-4xl w-full">
-            <button
-              onClick={() => setIsOpen(false)}
-              className="absolute top-2 right-2 text-white bg-black/50 rounded-full p-2"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <Image
-              src={project.images?.[activeImage] || ""}
-              alt="Gallery"
-              width={1000}
-              height={700}
-              className="rounded max-h-[80vh] mx-auto object-contain"
-            />
-            <div className="mt-4 text-center text-white">
-              <button
-                onClick={() =>
-                  setActiveImage((activeImage - 1 + project.images!.length) % project.images!.length)
-                }
-                className="mr-4 text-lg hover:underline"
-              >
-                ← Previous
-              </button>
-              <button
-                onClick={() => setActiveImage((activeImage + 1) % project.images!.length)}
-                className="text-lg hover:underline"
-              >
-                Next →
-              </button>
-            </div>
-          </Dialog.Panel>
+      {/* Videos */}
+      {project.videos?.length ? (
+        <div>
+          <h2 className="mt-12 text-3xl font-semibold text-gray-900 flex items-center gap-2">
+            🎥 Videos
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            {project.videos!.map((url, i) => (
+              <Card key={i} className="overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="aspect-video">
+                    <iframe
+                      src={url}
+                      title={`Video ${i + 1}`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
+      ) : null}
+
+      {/* Lightbox */}
+      <Dialog
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
+      >
+        <Dialog.Panel className="relative w-full max-w-4xl">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white"
+          >
+            <X size={20} />
+          </button>
+          <div className="relative">
+            <Image
+              src={images[activeImage]}
+              alt={`Lightbox ${activeImage + 1}`}
+              width={1200}
+              height={800}
+              className="object-contain rounded-lg"
+            />
+            <button
+              onClick={() =>
+                setActiveImage((activeImage - 1 + images.length) % images.length)
+              }
+              className="absolute left-0 top-1/2 -translate-y-1/2 p-3 bg-black/50 text-white rounded-r-lg"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button
+              onClick={() => setActiveImage((activeImage + 1) % images.length)}
+              className="absolute right-0 top-1/2 -translate-y-1/2 p-3 bg-black/50 text-white rounded-l-lg"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </div>
+        </Dialog.Panel>
       </Dialog>
 
-      {/* Info Section */}
-     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 text-gray-800">
-  {/* Overview Section */}
-  <div>
-    <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-      <span className="text-blue-600">📋</span> Project Overview
-    </h2>
-    <p className="leading-relaxed text-gray-600 text-justify">
-      {project.description}
-    </p>
-  </div>
+      {/* Overview & Metadata */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Overview */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="space-y-4"
+        >
+          <h3 className="text-2xl font-semibold flex items-center gap-2">
+            📋 Overview
+          </h3>
+          <p className="text-gray-600 leading-relaxed">{project.description}</p>
+        </motion.div>
 
-  {/* Metadata Section */}
-  <div className="bg-gray-50 border rounded-lg p-6 shadow-sm space-y-5">
-    <div className="flex items-start gap-4">
-      <span className="text-xl">👤</span>
-      <div>
-        <h3 className="font-semibold text-lg">Client</h3>
-        <p className="text-gray-700">{project.client}</p>
-      </div>
-    </div>
-
-    <div className="flex items-start gap-4">
-      <span className="text-xl">📍</span>
-      <div>
-        <h3 className="font-semibold text-lg">Location</h3>
-        <p className="text-gray-700">{project.location}</p>
-      </div>
-    </div>
-
-    {project.completedDate && (
-      <div className="flex items-start gap-4">
-        <span className="text-xl">📆</span>
-        <div>
-          <h3 className="font-semibold text-lg">Completion Date</h3>
-          <p className="text-gray-700">
-            {new Date(project.completedDate).toLocaleDateString()}
-          </p>
+        {/* Info Cards */}
+        <div className="space-y-6">
+          {[
+            { icon: "👤", label: "Client", value: project.client },
+            { icon: "📍", label: "Location", value: project.location },
+            project.completedDate && {
+              icon: "📆",
+              label: "Completed",
+              value: new Date(project.completedDate).toLocaleDateString(),
+            },
+          ]
+            .filter(
+              (item): item is { icon: string; label: string; value: string } =>
+                Boolean(item)
+            )
+            .map(({ icon, label, value }) => (
+              <Card key={label}>
+                <CardContent className="flex items-center gap-4">
+                  <span className="text-2xl">{icon}</span>
+                  <div>
+                    <h4 className="font-medium">{label}</h4>
+                    <p className="text-gray-700">{value}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
         </div>
       </div>
-    )}
-  </div>
-</div>
 
-    </motion.div>
+      {/* Call to Action */}
+      <div className="text-center mt-16">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <h4 className="text-2xl font-semibold mb-4">
+            Interested in partnering on your next project?
+          </h4>
+          <Button size="lg">Get In Touch</Button>
+        </motion.div>
+      </div>
+    </div>
   );
 }

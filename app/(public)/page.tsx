@@ -4,6 +4,7 @@ import FeaturedProjects from "@/components/home/FeaturedProjects";
 import ServicesSection from "@/components/home/ServicesSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import CTASection from "@/components/home/CTASection";
+import InfoTabs from "@/components/home/InfoTabs";
 
 export const metadata: Metadata = {
   title: "Interior Design Portfolio",
@@ -15,6 +16,7 @@ export default function HomePage() {
     <div>
       <Hero />
       <FeaturedProjects />
+      <InfoTabs />
       <ServicesSection />
       <TestimonialsSection />
       <CTASection />

@@ -1,6 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import 'swiper/css';
+@import 'swiper/css/pagination';
+@import 'swiper/css/navigation';
+@import url("https://cdn.jsdelivr.net/npm/elementor-icons@5.5.0/assets/css/elementor-icons.min.css");
 
 :root {
   --foreground-rgb: 0, 0, 0;
@@ -71,11 +75,18 @@
     --chart-5: 340 75% 55%;
   }
 }
+@keyframes kenburns {
+  0%   { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+.kenburns {
+  /* zoom from 100% → 110% over 30s, then reverse */
+  animation: kenburns 30s ease-in-out infinite alternate;
+  transform-origin: center;
+}
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
     @apply bg-background text-foreground;
   }
